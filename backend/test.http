@@ -1,0 +1,290 @@
+@api = http://localhost:3000/api
+
+
+GET {{api}}/pokemon?search=char&sort=total&order=desc
+###
+GET {{api}}/pokemon?type=fire&page=1&limit=10
+###
+GET {{api}}/pokemon/25
+###
+GET {{api}}/reports
+###
+GET {{api}}/reports/5
+
+### ============ READ / SEARCH ============
+GET {{api}}/stats
+###
+GET {{api}}/types
+###
+GET {{api}}/moves?type=water&min_power=80&sort=power&order=desc
+###
+GET {{api}}/trainers
+###
+GET {{api}}/trainers?search=city&sort=teams&order=desc
+###
+GET {{api}}/trainers?hometown=Pallet Town
+###
+GET {{api}}/trainers?favorite_type=electric
+###
+GET {{api}}/trainers/1
+###
+GET {{api}}/teams?min_members=5&sort=power&order=desc
+###
+GET {{api}}/teams?trainer_id=1
+###
+GET {{api}}/teams/1
+###
+GET {{api}}/team-members?type=fire&sort=level&order=desc
+###
+GET {{api}}/team-members?min_level=60&trainer_id=1
+###
+GET {{api}}/team-members?search=zard
+###
+GET {{api}}/battles?trainer_id=1&sort=date&order=desc
+###
+GET {{api}}/battles?winner_team_id=1
+
+### ============ CREATE FLOW (run in order) ============
+
+# @name createTrainer
+POST {{api}}/trainers
+Content-Type: application/json
+
+{ "name": "Test Trainer", "hometown": "Viridian City", "favorite_type_id": 10 }
+
+###
+@trainerId = {{createTrainer.response.body.id}}
+
+# @name createTeam
+POST {{api}}/teams
+Content-Type: application/json
+
+{ "trainer_id": {{trainerId}}, "name": "Test Squad" }
+
+###
+@teamId = {{createTeam.response.body.id}}
+
+# Slot omitted -> first free slot is used. Run this 6 times with different pokemon_id values:
+# @name addMember
+POST {{api}}/team-members
+Content-Type: application/json
+
+{ "team_id": {{teamId}}, "pokemon_id": 71, "nickname": "Pika", "level": 55 }
+
+###
+POST {{api}}/team-members
+Content-Type: application/json
+
+{ "team_id": {{teamId}}, "pokemon_id": 6 }
+
+###
+POST {{api}}/team-members
+Content-Type: application/json
+
+{ "team_id": {{teamId}}, "pokemon_id": 9, "level": 60 }
+
+###
+POST {{api}}/team-members
+Content-Type: application/json
+
+{ "team_id": {{teamId}}, "pokemon_id": 3 }
+
+###
+POST {{api}}/team-members
+Content-Type: application/json
+
+{ "team_id": {{teamId}}, "pokemon_id": 94 }
+
+###
+POST {{api}}/team-members
+Content-Type: application/json
+
+{ "team_id": {{teamId}}, "pokemon_id": 150, "level": 100 }
+
+###
+# 7th Pokémon -> 409 "Team is full"
+POST {{api}}/team-members
+Content-Type: application/json
+
+{ "team_id": {{teamId}}, "pokemon_id": 133 }
+
+###
+@memberId = {{addMember.response.body.id}}
+
+# UPDATE nickname + level
+PUT {{api}}/team-members/{{memberId}}
+Content-Type: application/json
+
+{ "nickname": "Sparky", "level": 62 }
+
+###
+# Clear the nickname (blank -> NULL)
+PUT {{api}}/team-members/{{memberId}}
+Content-Type: application/json
+
+{ "nickname": "" }
+
+###
+# Set moves (ids from /api/moves?search=thunder)
+PUT {{api}}/team-members/{{memberId}}/moves
+Content-Type: application/json
+
+{ "move_ids": [85, 98, 86] }
+
+###
+GET {{api}}/teams/{{teamId}}
+
+###
+# Rename the team
+PUT {{api}}/teams/{{teamId}}
+Content-Type: application/json
+
+{ "name": "Renamed Squad" }
+
+###
+# Record a battle against Ash's team 1 (winner must be one of the two)
+# @name createBattle
+POST {{api}}/battles
+Content-Type: application/json
+
+{ "team1_id": {{teamId}}, "team2_id": 1, "winner_team_id": {{teamId}} }
+
+###
+@battleId = {{createBattle.response.body.id}}
+
+# Flip the winner
+PUT {{api}}/battles/{{battleId}}
+Content-Type: application/json
+
+{ "winner_team_id": 1 }
+
+### ============ CONSTRAINT FAILURES (each should return a clean 4xx) ============
+
+# UNIQUE: duplicate trainer name -> 409 ER_DUP_ENTRY
+POST {{api}}/trainers
+Content-Type: application/json
+
+{ "name": "Ash" }
+
+###
+# NOT NULL: missing name -> 400
+POST {{api}}/trainers
+Content-Type: application/json
+
+{ "hometown": "Nowhere" }
+
+###
+# FOREIGN KEY: trainer does not exist -> 400 ER_NO_REFERENCED_ROW_2
+POST {{api}}/teams
+Content-Type: application/json
+
+{ "trainer_id": 9999, "name": "Ghost Team" }
+
+###
+# UNIQUE (trainer_id, name): Ash already has "Kanto Journey" -> 409
+POST {{api}}/teams
+Content-Type: application/json
+
+{ "trainer_id": 1, "name": "Kanto Journey" }
+
+###
+# CHECK slot BETWEEN 1 AND 6 -> 400
+POST {{api}}/team-members
+Content-Type: application/json
+
+{ "team_id": {{teamId}}, "pokemon_id": 1, "slot": 7 }
+
+###
+# CHECK level BETWEEN 1 AND 100 -> 400 (101 is the CHECK; 200+ hits the TINYINT range instead)
+PUT {{api}}/team-members/{{memberId}}
+Content-Type: application/json
+
+{ "level": 101 }
+
+###
+# UNIQUE (team_id, slot): slot 2 is already used -> 409
+PUT {{api}}/team-members/{{memberId}}
+Content-Type: application/json
+
+{ "slot": 2 }
+
+###
+# CHECK: max 4 moves -> 400, and the old moveset is kept (rollback)
+PUT {{api}}/team-members/{{memberId}}/moves
+Content-Type: application/json
+
+{ "move_ids": [85, 98, 86, 87, 88] }
+
+###
+# UNIQUE: same move twice -> 409
+PUT {{api}}/team-members/{{memberId}}/moves
+Content-Type: application/json
+
+{ "move_ids": [85, 85] }
+
+###
+# CHECK: a team cannot battle itself -> 400
+POST {{api}}/battles
+Content-Type: application/json
+
+{ "team1_id": 1, "team2_id": 1, "winner_team_id": 1 }
+
+###
+# CHECK: winner must be one of the two teams -> 400
+POST {{api}}/battles
+Content-Type: application/json
+
+{ "team1_id": 1, "team2_id": 2, "winner_team_id": 3 }
+
+###
+# FK RESTRICT: team 1 is in battles -> 409 ER_ROW_IS_REFERENCED_2
+DELETE {{api}}/teams/1
+
+###
+# FK RESTRICT again, one level up: Ash's teams are in battles -> 409
+DELETE {{api}}/trainers/1
+
+###
+# 404s
+GET {{api}}/trainers/99999
+###
+GET {{api}}/trainers/abc
+
+### ============ CLEANUP (delete flow) ============
+
+# Release one Pokémon
+DELETE {{api}}/team-members/{{memberId}}
+
+###
+# Battle must go first (FK RESTRICT)
+DELETE {{api}}/battles/{{battleId}}
+
+###
+# Deleting the trainer cascades: their team, its members and moves all go
+DELETE {{api}}/trainers/{{trainerId}}
+
+###
+GET {{api}}/teams/{{teamId}}
+
+### ============ CONSTRAINT PLAYGROUND ============
+GET {{api}}/constraints
+###
+POST {{api}}/constraints/pk-types/run
+###
+POST {{api}}/constraints/check-level/run
+###
+POST {{api}}/constraints/fk-cascade/run
+###
+POST {{api}}/constraints/default-values/run
+###
+POST {{api}}/constraints/view-update/run
+###
+# Self-test: expect "failed": []
+POST {{api}}/constraints/run-all
+
+### ============ VIEWS ============
+GET {{api}}/views
+###
+GET {{api}}/views/v_team_summary
+###
+GET {{api}}/views/nope

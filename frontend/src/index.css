@@ -1,0 +1,132 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* ---------- Theme 1: Pokédex (light) ---------- */
+@plugin "daisyui/theme" {
+  name: "pokedex";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+  --color-base-100: #fff8e7;
+  --color-base-200: #f3e9cf;
+  --color-base-300: #e0d2ab;
+  --color-base-content: #2b2b2b;
+  --color-primary: #dc2626;
+  --color-primary-content: #ffffff;
+  --color-secondary: #3b4cca;
+  --color-secondary-content: #ffffff;
+  --color-accent: #ffcb05;
+  --color-accent-content: #2b2b2b;
+  --color-neutral: #2b2d31;
+  --color-neutral-content: #f5f5f5;
+  --color-info: #3b82f6;
+  --color-info-content: #ffffff;
+  --color-success: #22c55e;
+  --color-success-content: #052e16;
+  --color-warning: #f59e0b;
+  --color-warning-content: #2b1700;
+  --color-error: #ef4444;
+  --color-error-content: #ffffff;
+  --radius-selector: 0.5rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.75rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 2px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* ---------- Theme 2: Game Boy (dark) ---------- */
+@plugin "daisyui/theme" {
+  name: "gameboy";
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+  --color-base-100: #0f380f;
+  --color-base-200: #0b2c0b;
+  --color-base-300: #082008;
+  --color-base-content: #9bbc0f;
+  --color-primary: #8bac0f;
+  --color-primary-content: #0f380f;
+  --color-secondary: #306230;
+  --color-secondary-content: #9bbc0f;
+  --color-accent: #9bbc0f;
+  --color-accent-content: #0f380f;
+  --color-neutral: #306230;
+  --color-neutral-content: #9bbc0f;
+  --color-info: #8bac0f;
+  --color-info-content: #0f380f;
+  --color-success: #9bbc0f;
+  --color-success-content: #0f380f;
+  --color-warning: #c7d957;
+  --color-warning-content: #0f380f;
+  --color-error: #d9534f;
+  --color-error-content: #ffffff;
+  --radius-selector: 0rem;
+  --radius-field: 0rem;
+  --radius-box: 0.25rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 2px;
+  --depth: 0;
+  --noise: 0;
+}
+
+/* ---------- Fonts + the 18 type colors ---------- */
+/* "static" makes Tailwind emit every variable, even ones only used via inline styles */
+@theme static {
+  --font-pixel: "Press Start 2P", ui-monospace, monospace;
+  --font-body: "Pixelify Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-type-normal: #a8a77a;
+  --color-type-fire: #ee8130;
+  --color-type-water: #6390f0;
+  --color-type-electric: #f7d02c;
+  --color-type-grass: #7ac74c;
+  --color-type-ice: #96d9d6;
+  --color-type-fighting: #c22e28;
+  --color-type-poison: #a33ea1;
+  --color-type-ground: #e2bf65;
+  --color-type-flying: #a98ff3;
+  --color-type-psychic: #f95587;
+  --color-type-bug: #a6b91a;
+  --color-type-rock: #b6a136;
+  --color-type-ghost: #735797;
+  --color-type-dragon: #6f35fc;
+  --color-type-dark: #705746;
+  --color-type-steel: #b7b7ce;
+  --color-type-fairy: #d685ad;
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+/* ---------- Pure-CSS Poké Ball (loader + decoration) ---------- */
+.pokeball {
+  position: relative;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  border: 3px solid #222;
+  background: linear-gradient(to bottom, #dc2626 0 46%, #222 46% 54%, #fff 54% 100%);
+}
+.pokeball::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34%;
+  height: 34%;
+  transform: translate(-50%, -50%);
+  border-radius: 9999px;
+  background: #fff;
+  border: 3px solid #222;
+}
+.pokeball-spin {
+  animation: pokeball-spin 0.9s linear infinite;
+}
+@keyframes pokeball-spin {
+  to { transform: rotate(360deg); }
+}
