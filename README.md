@@ -47,8 +47,8 @@ The app is a window onto the database. Every feature maps to something in the sc
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/<your-username>/<repo-name>.git
-cd <repo-name>
+git clone https://github.com/JimMilton1900/poketrainer.git
+cd poketrainer
 
 cd backend && npm install
 cd ../frontend && npm install
