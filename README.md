@@ -197,6 +197,3 @@ Unofficial fan project, made for coursework and not for profit. Pokémon and rel
 
 The constraint playground executes server-defined SQL with no authentication. This is intended for a local demo and is not production-ready.
 
-## License
-
-Code is released under the MIT License (see `LICENSE`). This does not cover Pokémon names, artwork, or other third-party content.
